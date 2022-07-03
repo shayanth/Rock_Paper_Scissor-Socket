@@ -22,6 +22,7 @@ server.listen(2)
 clients = list()
 players_count = 0
 turn = 0
+players_choice = {}
 
 def Recv_data(soc):
 
@@ -35,16 +36,22 @@ def Recv_data(soc):
 
     return data.decode(FORMAT)
 
+def Winners(choices):
+    pass
+
 
 def handle_client(id,conn):
     global turn
     global players_count
+    global players_choice
     print(f"[NEW CONNECTION {addr} CONNECTED]")
     connected = True
 
     while connected:
             msg = Recv_data(conn)
-
+            tmp = msg.split("*")
+            if turn == id:
+                
             if msg == DISCONNECT_MESSAGE:
                 connected = False
                 conn.send("Connection is ended".encode(FORMAT))
@@ -53,6 +60,7 @@ def handle_client(id,conn):
                 players_count -= 1
                 print(clients)
                 continue
+            if
     conn.close()
 
 
@@ -66,6 +74,7 @@ while True:
     conn, addr = server.accept()
     if len(clients) >= 3:
         print("server full!")
+        conn.send("!DC")
         conn.close()
         continue
 
