@@ -19,12 +19,13 @@ CLIENT_LIST_MESSAGE = "!CL"
 #################### Socket For Client Created ###################
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 ##################################################################
-def Recv_data(soc):
 
-    data =""
+def Recv_data(sock):
+
+    data = b""
     bufsize = 1024
     while True:
-        packet = soc.recv(bufsize)
+        packet = sock.recv(bufsize)
         data += packet
         if len(packet) < bufsize:
             break
@@ -47,17 +48,18 @@ class GamePanel(QMainWindow):
         uic.loadUi("GUI.ui",self)
         self.show()
         self.turn = "0#0"
+        self.id ="0"
         self.isRunning = True
         self.PaperBtn.clicked.connect(lambda:self.handleClick("paper"))
         self.RockBtn.clicked.connect(lambda:self.handleClick("rock"))
         self.ScissorBtn.clicked.connect(lambda:self.handleClick("scissor"))
-        self.Status.clicked.connect(lambda:self.handleClick("!CL"))
+        # self.Status.clicked.connect(lambda:self.handleClick("!CL"))
         self.PaperBtn.setEnabled(False)
         self.RockBtn.setEnabled(False)
         self.ScissorBtn.setEnabled(False)
         self.check = 0
         self.players = []
-        self.thread = threading.Thread(target = self.connectToServer ,args=((lambda:self.isRunning)))
+        self.thread = threading.Thread(target = self.connectToServer,args=())
         self.thread.start()
         self.worker = Worker()
         self.worker.signal.connect(self.Signal_Handler)
@@ -68,26 +70,26 @@ class GamePanel(QMainWindow):
         self.RockBtn.setEnabled(status)
         self.ScissorBtn.setEnabled(status)
 
-    def connectToServer(self,isRunning):
-        connected =  isRunning
-        while connected:
+    def connectToServer(self):
+        while True:
             try:
-                tmp = Recv_data(client).split("*")
-                if tmp == "Start":
-                    self.turn = tmp[1]
-                    self.check = 1
-
+                msg = Recv_data(client)
+                tmp = msg.split("*")
+                if tmp:
+                    if tmp[0] == "Start":
+                        self.id =tmp[1].split("#")[0]
+                        self.turn = tmp[1].split("#")[1]
+                        self.check = 1
+                        print(self.id)
+                        print(self.turn)
             except:
                 continue
 
-    def ListSet(self,clients):
-        clients = clients.split("*")
-        for client in clients:
-            self.ListPanel.addItem(client)
     def Signal_Handler(self):
         if self.check == 1:
-            self.setButton(True)
-            self.GameChoice.setText("choose your option: ")            
+            if self.id == self.turn:
+                self.setButton(True)
+                self.GameChoice.setText("choose your Toy :)")            
 
     def closeEvent(self,event) :
         send(DISCONNECT_MESSAGE)
@@ -113,12 +115,7 @@ def Main():
     app = QApplication([])
     window = GamePanel()
     sys.exit(app.exec_() )   
-    
-    # t.daemon =True
-    # t.start()
-    
-
-    
+  
 
 if __name__ == "__main__":
     try:
