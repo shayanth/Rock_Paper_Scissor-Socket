@@ -21,6 +21,7 @@ CLIENT_LIST_MESSAGE = "!CL"
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 ##################################################################
 
+
 def Recv_data(sock):
 
     data = b""
@@ -108,12 +109,6 @@ class GamePanel(QMainWindow):
                     if tmp[0] == "winners":
                         self.check = 2
                         self.players_point =tmp[1].split("$")
-                    elif msg == "full":
-                        print("serever full")
-                        self.thread.join()
-                        client.close()
-                        self.close()
-                        break
             except:
                 continue
 
