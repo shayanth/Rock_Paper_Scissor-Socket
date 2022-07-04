@@ -1,5 +1,6 @@
 
 import socket
+from turtle import delay
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
@@ -47,6 +48,7 @@ class GamePanel(QMainWindow):
         super(GamePanel,self).__init__()
         uic.loadUi("GUI.ui",self)
         self.show()
+        self.players_point = [0,0,0]
         self.turn = "0#0"
         self.id ="0"
         self.isRunning = True
@@ -64,7 +66,17 @@ class GamePanel(QMainWindow):
         self.worker = Worker()
         self.worker.signal.connect(self.Signal_Handler)
         self.worker.start()
-        
+
+    def setScorBoard(self):
+        self.Scoreboard.clear()
+        players  = []
+        number = 1
+        for s in self.players_point:
+            players.append("Player " + str(number) + ": " + str(s))
+            number += 1
+        print(players)
+        self.Scoreboard.addItems(players)
+
     def setButton(self,status):
         self.PaperBtn.setEnabled(status)
         self.RockBtn.setEnabled(status)
@@ -92,6 +104,12 @@ class GamePanel(QMainWindow):
                         print("continue")
                         print(self.id)
                         print(self.turn)
+
+                    if tmp[0] == "winners":
+                        self.check = 2
+                        self.players_point =tmp[1].split("$")
+                        print("winner check")
+                        print(self.players_point)
                     elif tmp == "!DC":
                         print("session has been ended")
                         self.thread.join()
@@ -104,9 +122,17 @@ class GamePanel(QMainWindow):
 
     def Signal_Handler(self):
         if self.check == 1:
+            self.Header.setText(f"Welcome Player {self.id}")
+            self.setScorBoard()
             if self.id == self.turn:
                 self.setButton(True)
-                self.GameChoice.setText("choose your Toy :)")            
+                self.setScorBoard()
+                self.GameChoice.setText("choose your Toy :)")
+        elif self.check == 2:
+            self.setScorBoard()
+            self.GameChoice.setText("Game Finished check the scores")
+            delay(5000)
+            self.check = 1            
 
     def closeEvent(self,event) :
         send(DISCONNECT_MESSAGE)

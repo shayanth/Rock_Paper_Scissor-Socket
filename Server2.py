@@ -1,12 +1,6 @@
-
-from ast import arg
-from glob import glob
-from secrets import choice
 import socket
 import threading
-from tracemalloc import start
 
-from Client2 import send
 
 
 
@@ -27,6 +21,7 @@ players_count = 0
 turn = 0
 players_choice = {}
 round = 1
+player_scores =[0,0,0]
 def Recv_data(soc):
 
     data =b""
@@ -39,8 +34,58 @@ def Recv_data(soc):
 
     return data.decode(FORMAT)
 
-def Winners(choices):
-    pass
+def check(ch1,ch2):
+    # Rock ch2
+    if ch1 == "rock" and ch2 == "rock":
+        return 0
+    if ch1 == "paper" and ch2 == "rock":
+        return 1
+    if ch1 == "scissor" and ch2 == "rock":
+        return 2
+
+    # scissor ch2
+    if ch1 == "rock" and ch2 == "scissor":
+        return 1
+    if ch1 == "paper" and ch2 == "scissor":
+        return 2
+    if ch1 == "scissor" and ch2 == "scissor":
+        return 0
+
+    #  paper ch2
+    if ch1 == "rock" and ch2 == "paper":
+        return 2
+    if ch1 == "paper" and ch2 == "paper":
+        return 0
+    if ch1 == "scissor" and ch2 == "paper":
+        return 1
+    
+def Winners(players_choices):
+    global player_scores
+
+    if check(players_choices[0],players_choices[1]) == 1:
+        player_scores[0] += 1
+    elif check(players_choices[0],players_choices[1]) == 2:
+        player_scores[1] += 1
+    else:
+        pass
+
+    if check(players_choices[0],players_choices[2]) == 1:
+        player_scores[0] += 1
+    elif check(players_choices[0],players_choices[2]) == 2:
+        player_scores[2] += 1
+    else:
+        pass
+
+    if check(players_choices[1],players_choices[2]) == 1:
+        player_scores[1] += 1
+    elif check(players_choices[1],players_choices[2]) == 2:
+        player_scores[2] += 1
+    else:
+        pass
+
+    return player_scores
+
+        
 
 
 def handle_client(id,conn):
@@ -51,17 +96,38 @@ def handle_client(id,conn):
     connected = True
 
     while connected:
+            
             msg = Recv_data(conn)
+            
             if msg:
                 tmp = msg.split("*")
+                print(f"in start of checking turn:{turn}")
+                
+                print(f"after check: turn:{turn}")
                 if tmp[0] == "Next":
+                    
                     choice = tmp[1]
                     if turn == id:
                         players_choice[id] = choice
                         print(players_choice)
+                        
                         turn += 1
-                        message = str("continue*"+str(id)+"#"+str(turn))
-                        conn.send(message.encode(FORMAT))
+                        if turn == 3:
+                            point_list = Winners(players_choice)
+                            for client in clients:
+                                con = client[1]
+                                message = str("winners*"+str(point_list[0])+"$"+str(point_list[1])+"$"+str(point_list[2]))
+                                con.send(message.encode(FORMAT))
+                            turn = 0
+
+                        print(turn)
+                        for client in clients:
+                            con = client[1]
+                            message = str("continue*"+str(client[0])+"#"+str(turn))
+                            con.send(message.encode(FORMAT))
+                        print("Loop Finished")
+                
+                        
                 
                 if msg == DISCONNECT_MESSAGE:
                     connected = False
@@ -70,7 +136,7 @@ def handle_client(id,conn):
                     clients.remove((id ,conn))
                     print(clients)
                     continue
-            
+                    
     conn.close()
 
 
