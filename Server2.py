@@ -1,9 +1,12 @@
 
 from ast import arg
 from glob import glob
+from secrets import choice
 import socket
 import threading
 from tracemalloc import start
+
+from Client2 import send
 
 
 
@@ -23,7 +26,7 @@ clients = list()
 players_count = 0
 turn = 0
 players_choice = {}
-
+round = 1
 def Recv_data(soc):
 
     data =b""
@@ -49,18 +52,25 @@ def handle_client(id,conn):
 
     while connected:
             msg = Recv_data(conn)
-            tmp = msg.split("*")
-            if turn == id:
+            if msg:
+                tmp = msg.split("*")
+                if tmp[0] == "Next":
+                    choice = tmp[1]
+                    if turn == id:
+                        players_choice[id] = choice
+                        print(players_choice)
+                        turn += 1
+                        message = str("continue*"+str(id)+"#"+str(turn))
+                        conn.send(message.encode(FORMAT))
                 
-            if msg == DISCONNECT_MESSAGE:
-                connected = False
-                conn.send("Connection is ended".encode(FORMAT))
-                print(f"{addr} has been disconnected")
-                clients.remove((id ,conn))
-                players_count -= 1
-                print(clients)
-                continue
-            if
+                if msg == DISCONNECT_MESSAGE:
+                    connected = False
+                    conn.send("Connection is ended".encode(FORMAT))
+                    print(f"{addr} has been disconnected")
+                    clients.remove((id ,conn))
+                    print(clients)
+                    continue
+            
     conn.close()
 
 

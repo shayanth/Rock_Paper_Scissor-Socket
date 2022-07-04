@@ -84,6 +84,14 @@ class GamePanel(QMainWindow):
                         self.check = 1
                         print(self.id)
                         print(self.turn)
+
+                    if tmp[0] == "continue":
+                        self.id =tmp[1].split("#")[0]
+                        self.turn = tmp[1].split("#")[1]
+                        self.check = 1
+                        print("continue")
+                        print(self.id)
+                        print(self.turn)
                     elif tmp == "!DC":
                         print("session has been ended")
                         self.thread.join()
@@ -113,8 +121,9 @@ class GamePanel(QMainWindow):
             send(choice)
 
         else:
-            self.GameChoice.setText(f"Your choice: {choice}") 
-            send(choice[0])
+            self.GameChoice.setText(f"Your choice: {choice}")
+            send(f"Next*{choice}")
+            self.setButton(False)
 
 def send(msg):
     message = msg.encode(FORMAT)
