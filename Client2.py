@@ -51,6 +51,7 @@ class GamePanel(QMainWindow):
         self.players_point = [0,0,0]
         self.turn = "0#0"
         self.id ="0"
+        self.isOpen = True
         self.isRunning = True
         self.PaperBtn.clicked.connect(lambda:self.handleClick("paper"))
         self.RockBtn.clicked.connect(lambda:self.handleClick("rock"))
@@ -74,7 +75,6 @@ class GamePanel(QMainWindow):
         for s in self.players_point:
             players.append("Player " + str(number) + ": " + str(s))
             number += 1
-        print(players)
         self.Scoreboard.addItems(players)
 
     def setButton(self,status):
@@ -82,14 +82,17 @@ class GamePanel(QMainWindow):
         self.RockBtn.setEnabled(status)
         self.ScissorBtn.setEnabled(status)
 
+    def Win_Message(self):
+        QMessageBox.about(self, "Round Finished", "Check the Scoreboard !!")
+
     def connectToServer(self):
 
-        while True:
+        while self.isOpen:
             
             try:
                 msg = Recv_data(client)
                 tmp = msg.split("*")
-                if tmp:
+                if tmp  and msg:
                     if tmp[0] == "Start":
                         self.id =tmp[1].split("#")[0]
                         self.turn = tmp[1].split("#")[1]
@@ -101,42 +104,41 @@ class GamePanel(QMainWindow):
                         self.id =tmp[1].split("#")[0]
                         self.turn = tmp[1].split("#")[1]
                         self.check = 1
-                        print("continue")
-                        print(self.id)
-                        print(self.turn)
 
                     if tmp[0] == "winners":
                         self.check = 2
                         self.players_point =tmp[1].split("$")
-                        print("winner check")
-                        print(self.players_point)
-                    elif tmp == "!DC":
-                        print("session has been ended")
+                    elif msg == "full":
+                        print("serever full")
                         self.thread.join()
                         client.close()
+                        self.close()
                         break
-
-
             except:
                 continue
 
+
     def Signal_Handler(self):
         if self.check == 1:
-            self.Header.setText(f"Welcome Player {self.id}")
+            id = str(int(self.id ) + 1)
+            self.Header.setText(f"Welcome Player {id}")
             self.setScorBoard()
+            self.GameChoice.setText("Wait For the opponent")
             if self.id == self.turn:
                 self.setButton(True)
-                self.setScorBoard()
                 self.GameChoice.setText("choose your Toy :)")
-        elif self.check == 2:
+
+        if self.check == 2:
             self.setScorBoard()
             self.GameChoice.setText("Game Finished check the scores")
-            delay(5000)
-            self.check = 1            
+            self.Win_Message()
+            self.check = 1  
+                 
 
     def closeEvent(self,event) :
         send(DISCONNECT_MESSAGE)
         print("session has been ended")
+        self.isOpen = False
         self.thread.join()
         client.close()
 
@@ -148,8 +150,12 @@ class GamePanel(QMainWindow):
 
         else:
             self.GameChoice.setText(f"Your choice: {choice}")
-            send(f"Next*{choice}")
-            self.setButton(False)
+            if self.check == 1:
+                send(f"Next*{choice}")
+                self.setButton(False)
+            if self.check == 2:
+                pass
+
 
 def send(msg):
     message = msg.encode(FORMAT)

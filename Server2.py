@@ -96,14 +96,17 @@ def handle_client(id,conn):
     connected = True
 
     while connected:
-            
+            if len(clients)== 0:
+                players_count = 0
+                turn = 0
+                players_choice = {}
+                round = 1
+                player_scores =[0,0,0]
+
             msg = Recv_data(conn)
             
             if msg:
                 tmp = msg.split("*")
-                print(f"in start of checking turn:{turn}")
-                
-                print(f"after check: turn:{turn}")
                 if tmp[0] == "Next":
                     
                     choice = tmp[1]
@@ -125,7 +128,6 @@ def handle_client(id,conn):
                             con = client[1]
                             message = str("continue*"+str(client[0])+"#"+str(turn))
                             con.send(message.encode(FORMAT))
-                        print("Loop Finished")
                 
                         
                 
@@ -136,7 +138,7 @@ def handle_client(id,conn):
                     clients.remove((id ,conn))
                     print(clients)
                     continue
-                    
+                   
     conn.close()
 
 
@@ -148,6 +150,14 @@ print(f"[LISTENING] Server is listening on {SERVER}")
 
 while True:
     conn, addr = server.accept()
+    if len(clients) == 0:
+        players_count = 0
+        turn = 0
+        players_choice = {}
+        round = 1
+        player_scores =[0,0,0]
+        print("Len 0 executed")
+
     if len(clients) >= 3:
         print("server full!")
         conn.send("!DC")
