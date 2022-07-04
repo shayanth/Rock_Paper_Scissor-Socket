@@ -71,7 +71,9 @@ class GamePanel(QMainWindow):
         self.ScissorBtn.setEnabled(status)
 
     def connectToServer(self):
+
         while True:
+            
             try:
                 msg = Recv_data(client)
                 tmp = msg.split("*")
